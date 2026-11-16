@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><title>Vòng quay may mắn – Thống kê ghép nhóm</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f4f6fb;--fg:#1d2433;--card:#fff;--bd:#d7dcea;--ac:#4f6df5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141824;--fg:#e8ecf7;--card:#1e2435;--bd:#343c55}}
+:root[data-theme="dark"]{--bg:#141824;--fg:#e8ecf7;--card:#1e2435;--bd:#343c55}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,"Segoe UI",Roboto,sans-serif}
+.w{max-width:720px;margin:0 auto;padding:14px}
+h1{font-size:1.25rem;text-align:center;margin:4px 0 10px}
+.st{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+.st span,.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:6px 12px}
+.card{padding:14px;margin-bottom:12px}
+#wb{text-align:center}.wh{position:relative;width:min(320px,86vw);margin:0 auto}
+canvas{width:100%;height:auto;transition:transform 4s cubic-bezier(.15,.7,.1,1);border-radius:50%;box-shadow:0 4px 16px #0003}
+.pt{position:absolute;left:50%;top:-8px;transform:translateX(-50%);border:11px solid transparent;border-top:24px solid var(--fg);z-index:2}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:10px 20px;background:var(--ac);color:#fff;font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+.lg{display:flex;gap:6px 12px;justify-content:center;flex-wrap:wrap;font-size:.8rem;margin:10px 0}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+.bd{display:inline-block;color:#fff;border-radius:8px;padding:2px 10px;font-size:.85rem;font-weight:600}
+.tm{height:8px;background:var(--bd);border-radius:6px;overflow:hidden;margin:8px 0}.tm div{height:100%;background:var(--ac);width:100%}
+.op{display:block;width:100%;text-align:left;margin:8px 0;background:var(--card);color:var(--fg);border:2px solid var(--bd)}
+.op.ok{border-color:#2e9e5b;background:#2e9e5b33}.op.no{border-color:#d63a3a;background:#d63a3a33}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 2px;line-height:1.3}
+.fr>span:first-child{border-bottom:1px solid currentColor;padding:0 3px}.fr>span:last-child{padding:0 3px}
+.sc{overflow-x:auto}.tb{border-collapse:collapse;margin:8px auto;font-size:.9rem}.tb td,.tb th{border:1px solid var(--bd);padding:3px 8px;text-align:center}
+.ch{width:100%;max-width:420px;display:block;margin:6px auto}
+.ex{border-left:4px solid var(--ac);padding:4px 12px;margin-top:10px;background:var(--bg);border-radius:6px}
+.h{display:none}.big{font-size:2.4rem;font-weight:800;text-align:center}
+</style></head><body><div class="w">
+<h1>🎡 Vòng quay may mắn – Số đặc trưng đo xu thế trung tâm của mẫu số liệu ghép nhóm</h1>
+<div class="st"><span>Điểm: <b id="sc">0</b>/210</span><span>Đã quay: <b id="dn">0</b>/20</span><span>Đúng: <b id="ok">0</b></span></div>
+<div id="wb" class="card"><div class="wh"><div class="pt"></div><canvas id="cv" width="320" height="320"></canvas></div><p><button id="sp">QUAY!</button></p>
+<div class="lg" id="lg"></div></div>
+<div id="qb" class="card h"></div>
+<div id="en" class="card h"></div>
+</div>
+<script>
+const L=[["Nhận biết",60,5,"#2e9e5b"],["Thông hiểu",120,10,"#2f7de1"],["Vận dụng thấp",150,15,"#f08c1a"],["Vận dụng cao",180,20,"#d63a3a"]];
+const D2=[40,10,[5,10,15,12,8]],D3=[100,10,[3,7,12,5,3]],D6=[1000,100,[5,12,20,10,3]];
+const QS=[
+{l:0,q:"Giá trị đại diện của nhóm [a; b) trong mẫu số liệu ghép nhóm là",o:["{a + b|2}","b − a","{b − a|2}","a · b"],e:"Giá trị đại diện của một nhóm là <b>trung điểm</b> của nhóm đó: {a + b|2}.<br>Ví dụ nhóm [10; 20) có giá trị đại diện {10 + 20|2} = 15."},
+{l:0,q:"Mẫu số liệu ghép nhóm có k nhóm, giá trị đại diện x_{1}, …, x_{k}, tần số m_{1}, …, m_{k}, cỡ mẫu n = m_{1} + … + m_{k}. Số trung bình x̄ được tính bởi",o:["x̄ = {m_{1}x_{1} + m_{2}x_{2} + … + m_{k}x_{k}|n}","x̄ = {x_{1} + x_{2} + … + x_{k}|k}","x̄ = {m_{1} + m_{2} + … + m_{k}|x_{1} + … + x_{k}}","x̄ = {n|m_{1}x_{1} + … + m_{k}x_{k}}"],e:"Nhóm thứ i có m_{i} giá trị, mỗi giá trị xấp xỉ x_{i}, nên tổng các giá trị xấp xỉ m_{1}x_{1} + … + m_{k}x_{k}. Chia cho cỡ mẫu n ta được số trung bình.<br>Phương án x̄ = {x_{1} + … + x_{k}|k} sai vì quên nhân với tần số m_{i}."},
+{l:0,q:"Với mẫu số liệu ghép nhóm có các nhóm cùng độ dài, nhóm chứa mốt là nhóm có",o:["tần số lớn nhất","tần số nhỏ nhất","giá trị đại diện lớn nhất","giá trị đại diện nhỏ nhất"],e:"Mốt đo giá trị xuất hiện nhiều nhất nên nhóm chứa mốt là nhóm có <b>tần số lớn nhất</b>.<br>Sau đó dùng M_{o} = u_{j} + {m_{j} − m_{j−1}|(m_{j} − m_{j−1}) + (m_{j} − m_{j+1})}·h."},
+{l:0,q:"Trong công thức trung vị M_{e} = u_{m} + {{n|2} − C|n_{m}}·(u_{m+1} − u_{m}), đại lượng C là",o:["tổng tần số của các nhóm đứng trước nhóm chứa trung vị","tần số của nhóm chứa trung vị","tổng tần số của các nhóm đứng sau nhóm chứa trung vị","cỡ mẫu n"],e:"C là tổng tần số của <b>các nhóm đứng trước</b> nhóm chứa trung vị (tần số tích lũy của nhóm liền trước).<br>Nhóm chứa trung vị là nhóm đầu tiên có tần số tích lũy ≥ {n|2}; n_{m} là tần số của nhóm đó."},
+{l:0,q:"Cho bảng tần số ghép nhóm sau. Số trung bình của mẫu là",d:[0,10,[5,5]],o:["10","15","5","7,5"],e:"Giá trị đại diện: 5 và 15; n = 10.<br>x̄ = {5·5 + 5·15|10} = {100|10} = 10."},
+{l:1,q:"Thời gian đi từ nhà đến trường (phút) của 20 học sinh được cho ở bảng. Số trung bình của mẫu là",d:[0,5,[2,4,8,4,2]],h:"Thời gian (phút)",o:["12,5","12","13","11,5"],e:"Giá trị đại diện: 2,5; 7,5; 12,5; 17,5; 22,5.<br>x̄ = {2·2,5 + 4·7,5 + 8·12,5 + 4·17,5 + 2·22,5|20} = {5 + 30 + 100 + 70 + 45|20} = {250|20} = 12,5 (phút)."},
+{l:1,q:"Điểm kiểm tra của 50 học sinh được cho ở bảng. Trung vị M_{e} của mẫu (làm tròn đến hàng phần mười) là",d:D2,h:"Điểm",o:["66,7","66,25","65,5","68"],e:"n = 50 nên {n|2} = 25. Tần số tích lũy: 5; 15; 30; … Nhóm đầu tiên có tần số tích lũy ≥ 25 là [60; 70): u_{m} = 60, n_{m} = 15, C = 5 + 10 = 15, độ dài nhóm 10.<br>M_{e} = 60 + {25 − 15|15}·10 = 60 + {20|3} ≈ 66,7."},
+{l:1,q:"Điểm kiểm tra của 50 học sinh được cho ở bảng. Mốt M_{o} của mẫu là",d:D2,h:"Điểm",o:["66,25","66,7","65","60"],e:"Nhóm có tần số lớn nhất là [60; 70) (m_{j} = 15); nhóm đứng trước có tần số 10, nhóm đứng sau có tần số 12; h = 10.<br>M_{o} = 60 + {15 − 10|(15 − 10) + (15 − 12)}·10 = 60 + {5|8}·10 = 66,25."},
+{l:1,q:"Chiều cao (cm) của 30 cây trồng thử nghiệm được cho ở bảng. Chiều cao trung bình là",d:D3,h:"Chiều cao (cm)",o:["124,3","124,2","125","123,5"],e:"Giá trị đại diện: 105; 115; 125; 135; 145.<br>x̄ = {3·105 + 7·115 + 12·125 + 5·135 + 3·145|30} = {315 + 805 + 1500 + 675 + 435|30} = {3730|30} ≈ 124,3 (cm)."},
+{l:1,q:"Điểm kiểm tra của 50 học sinh được cho ở bảng. Tứ phân vị thứ nhất Q_{1} là",d:D2,o:["57,5","55","58,5","52,5"],e:"{n|4} = 12,5. Tần số tích lũy: 5; 15; … nên nhóm chứa Q_{1} là [50; 60): u_{m} = 50, n_{m} = 10, C = 5.<br>Q_{1} = 50 + {12,5 − 5|10}·10 = 50 + 7,5 = 57,5."},
+{l:1,q:"Điểm kiểm tra của 50 học sinh được cho ở bảng. Tứ phân vị thứ ba Q_{3} là",d:D2,o:["76,25","75","77,5","72,5"],e:"{3n|4} = 37,5. Tần số tích lũy: 5; 15; 30; 42 nên nhóm chứa Q_{3} là [70; 80): u_{m} = 70, n_{m} = 12, C = 30.<br>Q_{3} = 70 + {37,5 − 30|12}·10 = 70 + 6,25 = 76,25."},
+{l:1,q:"Chiều cao (cm) của 30 cây được cho ở bảng. Nhóm chứa trung vị của mẫu là",d:D3,o:["[120; 130)","[110; 120)","[130; 140)","[100; 110)"],e:"n = 30 nên {n|2} = 15. Tần số tích lũy lần lượt: 3; 10; 22; 27; 30.<br>Nhóm đầu tiên có tần số tích lũy ≥ 15 là [120; 130) (vì 10 < 15 ≤ 22)."},
+{l:1,q:"Cộng thêm 10 đơn vị vào mọi giá trị của một mẫu số liệu (mỗi nhóm [a; b) trở thành [a + 10; b + 10)), tần số giữ nguyên. Khi đó số trung bình của mẫu",o:["tăng thêm 10 đơn vị","tăng gấp 10 lần","không thay đổi","giảm đi 10 đơn vị"],e:"Giá trị đại diện mỗi nhóm đều tăng 10, nên<br>x̄' = {m_{1}(x_{1} + 10) + … + m_{k}(x_{k} + 10)|n} = x̄ + {10(m_{1} + … + m_{k})|n} = x̄ + 10."},
+{l:1,q:"Cân nặng (kg) của 40 học sinh lớp 11 được thống kê như biểu đồ và bảng. Cân nặng trung bình là",d:[40,5,[4,10,16,6,4]],h:"Cân nặng (kg)",o:["52","51,9","52,5","50"],e:"Giá trị đại diện: 42,5; 47,5; 52,5; 57,5; 62,5.<br>x̄ = {4·42,5 + 10·47,5 + 16·52,5 + 6·57,5 + 4·62,5|40} = {170 + 475 + 840 + 345 + 250|40} = {2080|40} = 52 (kg).<br>Lưu ý: 51,9 là trung vị chứ không phải số trung bình."},
+{l:1,q:"Chiều cao (cm) của 30 cây được cho ở bảng. Mốt của mẫu (làm tròn đến hàng phần mười) là",d:D3,o:["124,2","124,3","125","120"],e:"Nhóm có tần số lớn nhất là [120; 130) (12); nhóm trước có tần số 7, nhóm sau có tần số 5; h = 10.<br>M_{o} = 120 + {12 − 7|(12 − 7) + (12 − 5)}·10 = 120 + {5|12}·10 ≈ 124,2."},
+{l:2,q:"Cho bảng tần số ghép nhóm sau, biết số trung bình của mẫu bằng 16. Giá trị của x là",d:[0,10,[4,"x",6]],o:["10","8","12","14"],e:"Giá trị đại diện: 5; 15; 25 và n = 10 + x.<br>x̄ = {4·5 + 15x + 6·25|10 + x} = {170 + 15x|10 + x} = 16<br>⇒ 170 + 15x = 160 + 16x ⇒ x = 10.<br>Kiểm tra: n = 20, tổng = 20 + 150 + 150 = 320, {320|20} = 16 ✓."},
+{l:2,q:"Tuổi thọ (giờ) của 50 bóng đèn được kiểm tra như biểu đồ và bảng. Trung vị của mẫu là",d:D6,h:"Tuổi thọ (giờ)",o:["1240","1238","1244,4","1250"],e:"{n|2} = 25. Tần số tích lũy: 5; 17; 37; … nên nhóm chứa trung vị là [1200; 1300): u_{m} = 1200, n_{m} = 20, C = 17, độ dài 100.<br>M_{e} = 1200 + {25 − 17|20}·100 = 1200 + 40 = 1240 (giờ).<br>Lưu ý: 1238 là số trung bình, 1244,4 là mốt."},
+{l:2,q:"Tuổi thọ (giờ) của 50 bóng đèn được cho ở biểu đồ và bảng. Khoảng tứ phân vị ΔQ = Q_{3} − Q_{1} là",d:D6,h:"Tuổi thọ (giờ)",o:["142,5","1305","157,5","162,5"],e:"<b>Q_{1}:</b> {n|4} = 12,5; tích lũy 5; 17 nên nhóm [1100; 1200): n_{m} = 12, C = 5.<br>Q_{1} = 1100 + {12,5 − 5|12}·100 = 1162,5.<br><b>Q_{3}:</b> {3n|4} = 37,5; tích lũy 5; 17; 37; 47 nên nhóm [1300; 1400): n_{m} = 10, C = 37.<br>Q_{3} = 1300 + {37,5 − 37|10}·100 = 1305.<br>ΔQ = 1305 − 1162,5 = 142,5."},
+{l:3,q:"Cho bảng tần số ghép nhóm sau (x là số nguyên dương). Biết trung vị của mẫu bằng 22,5 và nhóm chứa trung vị là [20; 30). Giá trị của x là",d:[0,10,[4,"x",12,6]],o:["8","6","10","12"],e:"n = 4 + x + 12 + 6 = 22 + x. Nhóm chứa trung vị [20; 30): C = 4 + x, n_{m} = 12.<br>M_{e} = 20 + {{22 + x|2} − (4 + x)|12}·10 = 22,5 ⇒ {22 + x|2} − 4 − x = 3<br>⇒ 11 + {x|2} − 4 − x = 3 ⇒ 7 − {x|2} = 3 ⇒ x = 8.<br>Kiểm tra: n = 30, {n|2} = 15, 12 < 15 ≤ 24 nên đúng nhóm [20; 30) ✓."},
+{l:3,q:"Điểm kiểm tra lớp 11A (50 học sinh) cho ở bảng. Lớp 11B (50 học sinh) có tần số của các nhóm [40; 50), [50; 60), [60; 70), [70; 80), [80; 90) lần lượt là 5; 5; 15; 15; 10. Gộp hai lớp thành mẫu 100 học sinh, trung vị của mẫu gộp (làm tròn đến hàng phần mười) là",d:D2,h:"Điểm lớp 11A",o:["68,3","66,7","67,5","69,2"],e:"Tần số gộp: 10; 15; 30; 27; 18 (tổng 100).<br>{n|2} = 50; tích lũy: 10; 25; 55 nên nhóm chứa trung vị là [60; 70): n_{m} = 30, C = 25.<br>M_{e} = 60 + {50 − 25|30}·10 = 60 + {25|3} ≈ 68,3.<br>Lưu ý: không lấy trung bình hai trung vị riêng (66,7 chỉ là của 11A); phải gộp tần số rồi tính lại."}
+];
+const $=i=>document.getElementById(i);
+const M=s=>{s=s.replace(/_\{([^{}]*)\}/g,'<sub>$1</sub>').replace(/\^\{([^{}]*)\}/g,'<sup>$1</sup>');const r=/\{([^{}|]*)\|([^{}]*)\}/;while(r.test(s))s=s.replace(r,'<span class="fr"><span>$1</span><span>$2</span></span>');return s};
+const tbl=([a,w,f])=>'<div class="sc"><table class="tb"><tr><th>Nhóm</th>'+f.map((_,i)=>`<td>[${a+i*w}; ${a+(i+1)*w})</td>`).join('')+'</tr><tr><th>Tần số</th>'+f.map(v=>`<td>${v}</td>`).join('')+'</tr></table></div>';
+function chart([a,w,f],u){const m=Math.max(...f),W=340,H=150,b=W/f.length;let s=`<svg class="ch" viewBox="0 0 ${W+40} ${H+48}" fill="currentColor" font-family="system-ui"><line x1="30" y1="${H}" x2="${W+32}" y2="${H}" stroke="currentColor"/>`;f.forEach((v,i)=>{const h=v/m*(H-22);s+=`<rect x="${30+i*b}" y="${H-h}" width="${b}" height="${h}" fill="#6c8cf5" stroke="#fff"/><text x="${30+i*b+b/2}" y="${H-h-4}" text-anchor="middle" font-size="11">${v}</text>`});for(let i=0;i<=f.length;i++)s+=`<text x="${30+i*b}" y="${H+14}" text-anchor="middle" font-size="10">${a+i*w}</text>`;return s+`<text x="${30+W/2}" y="${H+34}" text-anchor="middle" font-size="11">${u} – tần số (số lượng)</text></svg>`}
+let used=Array(20).fill(0),sc=0,ok=0,cur=-1,rot=0,tm,busy=0,pos=0,done=0;
+const cv=$('cv'),c=cv.getContext('2d');
+$('lg').innerHTML=L.map(x=>`<span><i style="background:${x[3]}"></i>${x[0]} · ${x[1]}s · ${x[2]}đ</span>`).join('');
+function draw(){const R=160;c.clearRect(0,0,320,320);for(let s=0;s<20;s++){const q=s*7%20,a0=(-90+s*18)*Math.PI/180,a1=a0+Math.PI/10;c.beginPath();c.moveTo(R,R);c.arc(R,R,R-4,a0,a1);c.closePath();c.fillStyle=used[q]?'#9aa0a6':L[QS[q].l][3];c.fill();c.strokeStyle='#fff';c.lineWidth=2;c.stroke();c.save();c.translate(R,R);c.rotate((a0+a1)/2);c.fillStyle='#fff';c.font='bold 18px system-ui';c.textAlign='right';c.fillText(q+1,R-20,6);c.restore()}c.beginPath();c.arc(R,R,22,0,7);c.fillStyle='#fff';c.fill()}
+function upd(){$('sc').textContent=sc;$('dn').textContent=done;$('ok').textContent=ok}
+$('sp').onclick=()=>{if(busy)return;busy=1;$('sp').disabled=1;const r=[...Array(20).keys()].filter(i=>!used[i]),q=r[Math.random()*r.length|0],s=q*3%20;rot+=1800+(((-(s*18+9)-rot)%360)+360)%360;cv.style.transform=`rotate(${rot}deg)`;setTimeout(()=>show(q),4300)};
+function show(q){cur=q;const Q=QS[q],lv=L[Q.l];const idx=[0,1,2,3].sort(()=>Math.random()-.5);pos=idx.indexOf(0);
+$('qb').innerHTML=`<span class="bd" style="background:${lv[3]}">Câu ${q+1} · ${lv[0]} · ${lv[2]} điểm</span> <b id="tx" style="float:right"></b><div class="tm"><div id="bar"></div></div><p>${M(Q.q)}</p>${Q.d?tbl(Q.d):''}${Q.h?chart(Q.d,Q.h):''}`+idx.map((k,i)=>`<button class="op" data-i="${i}">${'ABCD'[i]}. ${M(Q.o[k])}</button>`).join('');
+$('wb').classList.add('h');$('qb').classList.remove('h');$('en').classList.add('h');
+document.querySelectorAll('.op').forEach(b=>b.onclick=()=>reveal(+b.dataset.i));
+let left=lv[1];const t=()=>{$('tx').textContent='⏱ '+Math.ceil(left)+'s';$('bar').style.width=left/lv[1]*100+'%'};t();
+tm=setInterval(()=>{left-=.1;t();if(left<=0)reveal(-1)},100)}
+function reveal(k){clearInterval(tm);const Q=QS[cur],lv=L[Q.l];document.querySelectorAll('.op').forEach((b,i)=>{b.disabled=1;if(i==pos)b.classList.add('ok');else if(i==k)b.classList.add('no')});
+const good=k===pos;done++;if(good){ok++;sc+=lv[2]}upd();
+$('en').innerHTML=`<b>${k<0?'⏰ Hết giờ!':good?'✅ Chính xác! +'+lv[2]+' điểm':'❌ Chưa đúng, đáp án đúng là '+'ABCD'[pos]}</b><div class="ex"><b>Lời giải chi tiết:</b><br>${M(Q.e)}</div><p style="text-align:center"><button id="nx">${done==20?'Xem kết quả':'Quay tiếp 🎡'}</button></p>`;
+$('en').classList.remove('h');$('nx').onclick=next;$('en').scrollIntoView({behavior:'smooth'})}
+function next(){used[cur]=1;draw();$('qb').classList.add('h');$('en').classList.add('h');if(done==20)return fin();$('wb').classList.remove('h');$('sp').disabled=0;busy=0;window.scrollTo(0,0)}
+function fin(){$('en').classList.remove('h');$('en').innerHTML=`<div class="big">${sc}/210</div><p style="text-align:center">Bạn trả lời đúng <b>${ok}/20</b> câu. ${sc>=170?'Xuất sắc! 🏆':sc>=120?'Rất tốt! 👏':sc>=70?'Khá ổn, hãy ôn lại các công thức nhé!':'Cố gắng ôn lại công thức và chơi lại nào!'}</p><p style="text-align:center"><button onclick="location.reload()">Chơi lại</button></p>`}
+draw();upd();
+</script></body></html>
